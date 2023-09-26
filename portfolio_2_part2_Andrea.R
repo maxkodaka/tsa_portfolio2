@@ -2,12 +2,14 @@
 ### from the DLM and possible explanatory variables
 
 library(raster)
-# library(rgdal)
+library(rgdal)
 # library(lattice)
 # library(gstat)
 # library(ranger)
 # library(ggplot2)
 # library(tibble)
+library(sp)
+library(sf)
 
 setwd("~/Dokumente/uni/SoSe23/Pattern Recognition/UE8_portfolio_part2/data")
 
@@ -65,6 +67,9 @@ tmp <- as(LST, "SpatialGridDataFrame")
 names(tmp)[1] <- "LST"
 grids$LST <-tmp
 
+# # visualisation
+# spplot(grids$ET)
+
 
 
 ## Build a training and validation data set based on 50.000 randomly selected pixels
@@ -74,5 +79,48 @@ grids$LST <-tmp
 Fvalue <- raster("F.tif")
 Fvalue[Fvalue == -999] <- NA
 grids$Fstat <- as(Fvalue, "SpatialGridDataFrame")
+# Pvalue <- raster("siglag3.tif") # for part III
 
+# create sample for random pixels
+set.seed(100)                                 # set seed for re
+x <- sample(1:(dim(Fvalue)[1]*dim(Fvalue)[2]), 50000)     
+# # for part III - boolean mask is needed, because of classification, siglag3 ....
+# sig <- as.data.frame(raster(grids$P))
+# sig[sig <= 0.05] <- 0 # significant
+# sig[sig > 0.05] <- 1  # non significant
+
+
+# grids --> data.frame
+  Fval <- as.data.frame(raster(grids$Fstat))
+  slope <- as.data.frame(raster(grids$slope))
+  elev <- as.data.frame(raster(grids$elev))
+  twi <- as.data.frame(raster(grids$twi))
+  achan <- as.data.frame(raster(grids$achan))
+  aspect <- as.data.frame(raster(grids$aspect))
+  LST <- as.data.frame(raster(grids$LST))
+  ET <- as.data.frame(raster(grids$ET))
+  flowdir <- as.data.frame(raster(grids$flowdir))
+  tri <- as.data.frame(raster(grids$tri))
+  tpi <- as.data.frame(raster(grids$tpi))
+  roughness <- as.data.frame(raster(grids$roughness))
+  aridity <- as.data.frame(raster(grids$aridity))
+
+  
+# create subset vor all characteristics
+sub <- as.data.frame(cbind(Fval[x,1],slope[x,1], aspect[x,1], flowdir[x,1], aridity[x,1], ET[x,1], LST[x,1], roughness[x,1],
+                           elev[x,1], twi[x,1], achan[x,1], tri[x,1], tpi[x,1]))
+names(sub) <- c("Fval","slope","aspect","flowdir","aridity","ET","LST", "Roughness","elev","twi","achan","tri", "tpi")
+sub <- sub[complete.cases(sub),]        # throwing out all NA values
+
+
+# divide subset into half-half training-testing
+tmp <- sample(nrow(sub), 0.5 * nrow(sub))
+train <- sub[tmp, ]
+test <- sub[-tmp, ]
+
+
+
+## Run a random forest regression model (ranger function from the ranger library!) for
+## the training data set (dependent variable: multiple F-values from the DLM,
+## explanatory variables: the formerly created raster stack)
 
