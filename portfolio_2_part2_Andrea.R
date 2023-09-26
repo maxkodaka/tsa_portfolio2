@@ -3,13 +3,15 @@
 
 library(raster)
 library(rgdal)
+library(ranger)
 # library(lattice)
 # library(gstat)
-# library(ranger)
-# library(ggplot2)
-# library(tibble)
-library(sp)
-library(sf)
+library(magrittr)
+library(dplyr)
+library(tibble)
+library(ggplot2)
+# library(sp)
+# library(sf)
 
 setwd("~/Dokumente/uni/SoSe23/Pattern Recognition/UE8_portfolio_part2/data")
 
@@ -123,4 +125,27 @@ test <- sub[-tmp, ]
 ## Run a random forest regression model (ranger function from the ranger library!) for
 ## the training data set (dependent variable: multiple F-values from the DLM,
 ## explanatory variables: the formerly created raster stack)
+rf <- ranger(Fval ~ ., importance = "impurity",data = train)  # regression
+pred <- predict(rf, data=test)
+rf$r.squared # should be between 0-1, 0: bad, 1:good
 
+
+## Regress the modelled against observed F-values based on the validation data set.
+## Provide an interpretation of the results: can the outcomes of the DLM be linked with
+## any environmental variables (analyze the variable importance)?
+rf_imp <- as.data.frame(rf$variable.importance)
+names(rf_imp) <- "importance"
+rf_imp<- rf_imp %>% rownames_to_column("variable")
+
+# X11()
+prel <- ggplot(rf_imp, aes(x=reorder(variable,importance), y=importance,fill=importance))+ 
+  geom_bar(stat="identity", position="dodge")+ coord_flip()+
+  ylab("Variable Importance")+
+  xlab("")+
+  ggtitle("Information Value Summary")+
+  guides(fill=F)+
+  scale_fill_gradient(low="red", high="blue")
+print(prel)
+ggsave(filename = "Variable_Importance_part2_step2_result.png", plot = prel, width = 10, device = "png", dpi = 300)
+# dev.print(png, "Variable_Importance_part2_step2_result", width=500)
+# dev.off()
