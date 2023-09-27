@@ -1,22 +1,25 @@
+###################
+#### PART III ####
+#################
+
 ### Perform a regression analysis to find statistical relationships of the multiple F-value
 ### from the DLM and possible explanatory variables
 
 library(raster)
 library(rgdal)
 library(ranger)
-# library(lattice)
-# library(gstat)
 library(magrittr)
-#library(dplyr)
 library(tibble)
 library(ggplot2)
+library(gridExtra)
+library(flextable)
+# library(lattice)
+# library(gstat)
+#library(dplyr)
 # library(sp)
 # library(sf)
-library(gridExtra)
 
 setwd("/home/maxim/Documents/coursework/time-series-analysis/data_p2/")
-
-
 
 ## Use the following possibly explanatory spatial variables using the terrain function
 ## from the raster library and the DEM: slope, aspect, roughness, flowdirection, terrain
@@ -164,7 +167,7 @@ test <- sub[-tmp, ]
 ## explanatory variables: the formerly created raster stack)
 rf <- ranger(as.factor(sig) ~ ., importance = "impurity",data = train,num.trees=1000)  # classification
 pred <- predict(rf, data=test)
-rf$prediction.error # should be between 0-1, 0: bad, 1:good
+rf$prediction.error # should be between 0-1, 0: good, 1:bad
 rf$confusion.matrix
 
 ## Regress the modelled against observed F-values based on the validation data set.
@@ -183,12 +186,16 @@ prel <- ggplot(rf_imp, aes(x=reorder(variable,importance), y=importance,fill=imp
   guides(fill=F)+
   scale_fill_gradient(low="red", high="blue")
 print(prel)
-ggsave(filename = "../portfolio2/Variable_Importance_part2_step3_result.png", plot = prel, width = 10, device = "png", dpi = 300)
+ggsave(filename = "../portfolio2/Variable_Importance_part2_step3_result2.png", plot = prel, width = 10, device = "png", dpi = 300)
 # dev.print(png, "Variable_Importance_part2_step2_result", width=500)
 # dev.off()
 
-###################
-#### PART III ####
-#################
+set_flextable_defaults(
+  font.size = 10, #theme_fun = theme_vanilla,
+  padding = 6,
+)
+
+ft_confm = flextable(rf$confusion.matrix)
+save_as_image(ft_confm,path='../portfolio2/confmatrix.png')
 
 
