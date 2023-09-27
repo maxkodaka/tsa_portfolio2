@@ -83,15 +83,6 @@ Fvalue[Fvalue == -999] <- NA
 grids$Fstat <- as(Fvalue, "SpatialGridDataFrame")
 # Pvalue <- raster("siglag3.tif") # for part III
 
-# create sample for random pixels
-set.seed(100)                                 # set seed for re
-x <- sample(1:(dim(Fvalue)[1]*dim(Fvalue)[2]), 50000)     
-# # for part III - boolean mask is needed, because of classification, siglag3 ....
-# sig <- as.data.frame(raster(grids$P))
-# sig[sig <= 0.05] <- 0 # significant
-# sig[sig > 0.05] <- 1  # non significant
-
-
 # grids --> data.frame
   Fval <- as.data.frame(raster(grids$Fstat))
   slope <- as.data.frame(raster(grids$slope))
@@ -108,12 +99,18 @@ x <- sample(1:(dim(Fvalue)[1]*dim(Fvalue)[2]), 50000)
   aridity <- as.data.frame(raster(grids$aridity))
 
   
-# create subset vor all characteristics
-sub <- as.data.frame(cbind(Fval[x,1],slope[x,1], aspect[x,1], flowdir[x,1], aridity[x,1], ET[x,1], LST[x,1], roughness[x,1],
-                           elev[x,1], twi[x,1], achan[x,1], tri[x,1], tpi[x,1]))
-names(sub) <- c("Fval","slope","aspect","flowdir","aridity","ET","LST", "Roughness","elev","twi","achan","tri", "tpi")
-sub <- sub[complete.cases(sub),]        # throwing out all NA values
+# # create master data frame with all data
+master <- as.data.frame(cbind(Fval[,1],slope[,1], aspect[,1], flowdir[,1], aridity[,1], ET[,1], LST[,1], roughness[,1],
+                           elev[,1], twi[,1], achan[,1], tri[,1], tpi[,1]))
+names(master) <- c("Fval","slope","aspect","flowdir","aridity","ET","LST", "Roughness","elev","twi","achan","tri", "tpi")
+master <- master[complete.cases(master),]        # throwing out all NA values
 
+# create sample for random pixels
+set.seed(100)                                 # set seed for re
+x <- sample(dim(master)[1], 50000)  
+
+# create subset vor all characteristics
+sub <- master[x,]
 
 # divide subset into half-half training-testing
 tmp <- sample(nrow(sub), 0.5 * nrow(sub))
