@@ -79,7 +79,7 @@ grid_plot=grid.arrange(
   spplot(grids$achan, main = "Vertical Distance from Channel Network" ),
   ncol=2,nrow=3)
 
-ggsave("../ggplot.png", plot = grid_plot, width = 10, height = 8)
+ggsave("../portfolio2/spplots.png", plot = grid_plot, width = 10, height = 8)
 
 ## Build a training and validation data set based on 50.000 randomly selected pixels
 ## (only complete cases, 50% each)
@@ -106,8 +106,8 @@ set.seed(100)                                 # set seed for re
 
  # for part III - boolean mask is needed, because of classification, siglag3 ....
 sig <- as.data.frame(raster(grids$pval))
-sig[sig <= 0.05] <- 0 # significant
-sig[sig > 0.05] <- 1  # non significant
+sig[abs(sig) <= 0.05] <- 0 # significant
+sig[abs(sig) > 0.05] <- 1  # non significant
 
 
 
