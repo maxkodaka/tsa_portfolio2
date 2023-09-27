@@ -102,13 +102,7 @@ sig <- as.data.frame(raster(grids$pval))
 sig[sig <= 0.05] <- 0 # significant
 sig[sig > 0.05] <- 1  # non significant
 
-sig0_indices = which(sig==0)
-sig1_indices = which(sig==1)
 
-sig0_sample = sample(length(sig0_indices),20000)
-sig1_sample = sample(length(sig1_indices),20000)
-
-x = c(sig0_sample,sig1_sample)
 
   #Fval <- as.data.frame(raster(grids$Fstat))
   slope <- as.data.frame(raster(grids$slope))
@@ -124,12 +118,31 @@ x = c(sig0_sample,sig1_sample)
   roughness <- as.data.frame(raster(grids$roughness))
   aridity <- as.data.frame(raster(grids$aridity))
 
+
+# create master data frame with all data
   
+master = as.data.frame(cbind(sig[,1],slope[,1], aspect[,1], flowdir[,1], aridity[,1], ET[,1], LST[,1], roughness[,1],
+                             elev[,1], twi[,1], achan[,1], tri[,1], tpi[,1]))
+names(master) <- c("sig","slope","aspect","flowdir","aridity","ET","LST", "Roughness","elev","twi","achan","tri", "tpi")
+
+# throw out all NA values
+master = master[complete.cases(master),]
+
+
+
+# significance mask
+
+sig0_indices = which(master['sig']==0)
+sig1_indices = which(master['sig']==1)
+
+sig0_sample = sample(length(sig0_indices),20000)
+sig1_sample = sample(length(sig1_indices),20000)
+
+x = c(sig0_sample,sig1_sample)
+
+
 # create subset vor all characteristics
-sub <- as.data.frame(cbind(sig[x,1],slope[x,1], aspect[x,1], flowdir[x,1], aridity[x,1], ET[x,1], LST[x,1], roughness[x,1],
-                           elev[x,1], twi[x,1], achan[x,1], tri[x,1], tpi[x,1]))
-names(sub) <- c("sig","slope","aspect","flowdir","aridity","ET","LST", "Roughness","elev","twi","achan","tri", "tpi")
-sub <- sub[complete.cases(sub),]        # throwing out all NA values
+sub <- master[x,]
 
 
 # divide subset into half-half training-testing
