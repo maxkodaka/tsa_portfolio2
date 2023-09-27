@@ -12,6 +12,7 @@ library(tibble)
 library(ggplot2)
 # library(sp)
 # library(sf)
+library(gridExtra)
 
 setwd("/home/maxim/Documents/coursework/time-series-analysis/data_p2/")
 
@@ -69,10 +70,16 @@ tmp <- as(LST, "SpatialGridDataFrame")
 names(tmp)[1] <- "LST"
 grids$LST <-tmp
 
-# # visualisation
-# spplot(grids$ET)
 
+grid_plot=grid.arrange(
+  spplot(grids$ET, main = "Evapotranspiration"), 
+  spplot(grids$aridity, main = "Aridity" ),
+  spplot(grids$LST, main = "Mean Surface Temperature" ),
+  spplot(grids$twi, main = "Topographic Wetness Index" ),
+  spplot(grids$achan, main = "Vertical Distance from Channel Network" ),
+  ncol=2,nrow=3)
 
+ggsave("../ggplot.png", plot = grid_plot, width = 10, height = 8)
 
 ## Build a training and validation data set based on 50.000 randomly selected pixels
 ## (only complete cases, 50% each)
@@ -176,7 +183,7 @@ prel <- ggplot(rf_imp, aes(x=reorder(variable,importance), y=importance,fill=imp
   guides(fill=F)+
   scale_fill_gradient(low="red", high="blue")
 print(prel)
-ggsave(filename = "Variable_Importance_part2_step3_result.png", plot = prel, width = 10, device = "png", dpi = 300)
+ggsave(filename = "../portfolio2/Variable_Importance_part2_step3_result.png", plot = prel, width = 10, device = "png", dpi = 300)
 # dev.print(png, "Variable_Importance_part2_step2_result", width=500)
 # dev.off()
 
